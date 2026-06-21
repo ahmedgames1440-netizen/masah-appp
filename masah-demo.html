@@ -20523,7 +20523,17 @@ var __async = (__this, __arguments, generator) => {
     font-size:12px;
     font-weight:700;
     transition:.2s;
+    position:relative;
   }
+  .export-btn .lock-badge{
+    position:absolute;
+    top:6px; left:6px;
+    font-size:11px;
+    opacity:0.85;
+    display:none;
+  }
+  body.is-free .export-btn .lock-badge{ display:block; }
+  body.is-free .export-btn{ opacity:0.55; }
   .export-btn:hover{ border-color:var(--gold-500); transform:translateY(-2px); }
   .export-btn svg{ width:22px;height:22px; }
   .export-btn.word svg{ color:#5B9BD5; }
@@ -20566,6 +20576,148 @@ var __async = (__this, __arguments, generator) => {
   }
 
   ::-webkit-scrollbar{ width:0; }
+
+  /* ===== Pro Badge (شارة الاشتراك بالهيدر) ===== */
+  .pro-badge{
+    font-family:var(--font-en);
+    font-size:10px;
+    letter-spacing:1px;
+    color:var(--cream-200);
+    background:var(--ink-700);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:5px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .pro-badge.is-pro{
+    background:linear-gradient(135deg,var(--gold-500),var(--gold-400));
+    color:var(--ink-900);
+    border:none;
+    font-weight:700;
+  }
+
+  /* ===== Subscribe Modal ===== */
+  .subscribe-overlay{
+    position:fixed; inset:0;
+    background:rgba(5,10,18,0.78);
+    backdrop-filter:blur(4px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .subscribe-overlay.show{ display:flex; }
+  .subscribe-modal{
+    background:var(--ink-800);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:28px 22px;
+    max-width:400px;
+    width:100%;
+    position:relative;
+    text-align:center;
+    animation:modalRise .3s ease;
+  }
+  @keyframes modalRise{
+    from{ opacity:0; transform:translateY(16px) scale(0.97); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .modal-close{
+    position:absolute;
+    top:14px; right:14px;
+    background:var(--ink-700);
+    border:none;
+    color:var(--cream-200);
+    width:30px; height:30px;
+    border-radius:50%;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .modal-icon{
+    font-size:38px;
+    margin-bottom:6px;
+  }
+  .modal-title{
+    font-family:var(--font-ar-display);
+    font-size:24px;
+    font-weight:700;
+    color:var(--cream-50);
+    margin-bottom:6px;
+  }
+  .modal-subtitle{
+    font-size:13.5px;
+    color:var(--cream-200);
+    margin-bottom:22px;
+  }
+  .plans{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .plan-card{
+    flex:1;
+    background:var(--ink-900);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:14px 6px;
+    cursor:pointer;
+    color:var(--cream-50);
+    position:relative;
+    transition:.2s;
+  }
+  .plan-card.selected{
+    border-color:var(--gold-500);
+    background:rgba(212,165,116,0.08);
+  }
+  .plan-card.featured{
+    border-color:var(--gold-500);
+  }
+  .plan-badge{
+    position:absolute;
+    top:-10px; left:50%;
+    transform:translateX(-50%);
+    background:var(--gold-500);
+    color:var(--ink-900);
+    font-size:9px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:10px;
+    white-space:nowrap;
+  }
+  .plan-name{
+    font-size:12px;
+    color:var(--cream-200);
+    margin-bottom:8px;
+  }
+  .plan-price{
+    font-family:var(--font-en);
+    font-size:18px;
+    font-weight:700;
+    color:var(--cream-50);
+  }
+  .plan-price span{
+    font-size:11px;
+    color:var(--cream-200);
+    font-weight:400;
+  }
+  .subscribe-btn{ width:100%; margin-bottom:12px; }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--cream-200);
+    font-size:13px;
+    cursor:pointer;
+    padding:8px;
+    text-decoration:underline;
+  }
+  .demo-note{
+    font-size:10.5px;
+    color:rgba(247,244,238,0.4);
+    margin-top:10px;
+    line-height:1.5;
+  }
 </style>
 </head>
 <body>
@@ -20582,9 +20734,12 @@ var __async = (__this, __arguments, generator) => {
         <div class="brand-sub">scan · translate · export</div>
       </div>
     </div>
-    <div class="lang-toggle">
-      <button class="active" id="ui-ar">ع</button>
-      <button id="ui-en">EN</button>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="pro-badge" id="proBadge">3 قراءات متبقية</button>
+      <div class="lang-toggle">
+        <button class="active" id="ui-ar">ع</button>
+        <button id="ui-en">EN</button>
+      </div>
     </div>
   </header>
 
@@ -20661,18 +20816,22 @@ var __async = (__this, __arguments, generator) => {
       <div class="export-label" id="lblExport">تصدير الملف</div>
       <div class="export-row">
         <div class="export-btn word" id="exportWord">
+          <span class="lock-badge">🔒</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13l1.5 5L12 14l1.5 4L15 13"/></svg>
           Word
         </div>
         <div class="export-btn pdf" id="exportPdf">
+          <span class="lock-badge">🔒</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 17v-5h1.5a1.5 1.5 0 010 3H9M13.5 17v-5H15M13.5 14.5H15"/></svg>
           PDF
         </div>
         <div class="export-btn excel" id="exportExcel">
+          <span class="lock-badge">🔒</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13l5 4M14 13l-5 4"/></svg>
           Excel
         </div>
         <div class="export-btn pptx" id="exportPptx">
+          <span class="lock-badge">🔒</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 9h3a2 2 0 010 4H8V9z"/><path d="M8 13v3"/></svg>
           PPT
         </div>
@@ -20686,6 +20845,38 @@ var __async = (__this, __arguments, generator) => {
 
 <div class="toast" id="toast"></div>
 
+<!-- نافذة الاشتراك المنبثقة -->
+<div class="subscribe-overlay" id="subscribeOverlay">
+  <div class="subscribe-modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-icon">⭐</div>
+    <h2 class="modal-title" id="subTitle">افتح كل المميزات</h2>
+    <p class="modal-subtitle" id="subSubtitle">تصدير غير محدود + قراءات بلا حدود</p>
+
+    <div class="plans">
+      <button class="plan-card" data-plan="month">
+        <div class="plan-name" id="planMonthLabel">شهر واحد</div>
+        <div class="plan-price">10 <span>ريال</span></div>
+      </button>
+      <button class="plan-card featured" data-plan="six">
+        <div class="plan-badge" id="bestValueLabel">الأفضل قيمة</div>
+        <div class="plan-name" id="planSixLabel">6 أشهر</div>
+        <div class="plan-price">50 <span>ريال</span></div>
+      </button>
+      <button class="plan-card" data-plan="year">
+        <div class="plan-name" id="planYearLabel">سنة كاملة</div>
+        <div class="plan-price">100 <span>ريال</span></div>
+      </button>
+    </div>
+
+    <button class="btn btn-primary subscribe-btn" id="confirmSubscribe">
+      <span id="subscribeLabel">اشترك الآن</span>
+    </button>
+    <button class="link-btn" id="maybeLaterBtn">ليس الآن</button>
+    <p class="demo-note" id="demoNoteText">هذا تفعيل تجريبي للعرض فقط — بدون دفع فعلي</p>
+  </div>
+</div>
+
 <script>
 const dict = {
   ar:{
@@ -20697,7 +20888,20 @@ const dict = {
     scanning:(p)=>`جارٍ تحليل النص… ${p}%`,
     noText:"لم يتم العثور على نص واضح، حاول بصورة أوضح",
     exported:(t)=>`تم تصدير ملف ${t} بنجاح`,
-    emptyTranslate:"ستظهر الترجمة هنا"
+    emptyTranslate:"ستظهر الترجمة هنا",
+    scansLeft:(n)=>`متبقي لك اليوم: ${n} من 3 قراءات مجانية`,
+    scansExhausted:"استهلكت قراءاتك المجانية لهذا اليوم",
+    upgradeNow:"ترقية للنسخة المميزة",
+    proFeature:"ميزة مدفوعة",
+    proRequired:"هذه الميزة تتطلب الاشتراك المميز",
+    subscribeTitle:"افتح كل المميزات",
+    subscribeSubtitle:"تصدير غير محدود + قراءات بلا حدود",
+    planMonth:"شهر واحد", planSix:"6 أشهر", planYear:"سنة كاملة",
+    perMonth:"شهرياً", save:"وفّر", bestValue:"الأفضل قيمة",
+    subscribe:"اشترك الآن", restoreFree:"الرجوع للنسخة المجانية",
+    maybeLater:"ليس الآن", activatedPro:"تم تفعيل النسخة المميزة (محاكاة) ✓",
+    demoNote:"هذا تفعيل تجريبي للعرض فقط — بدون دفع فعلي",
+    proActive:"مميز ✓", freeLeft:(n)=>`${n} قراءات متبقية`
   },
   en:{
     emptyText:"Scan a document or pick a photo — text is extracted instantly",
@@ -20708,10 +20912,73 @@ const dict = {
     scanning:(p)=>`Analyzing text… ${p}%`,
     noText:"No clear text found, try a clearer photo",
     exported:(t)=>`${t} file exported successfully`,
-    emptyTranslate:"Translation will appear here"
+    emptyTranslate:"Translation will appear here",
+    scansLeft:(n)=>`Today's free scans left: ${n} of 3`,
+    scansExhausted:"You've used all your free scans for today",
+    upgradeNow:"Upgrade to Premium",
+    proFeature:"Premium feature",
+    proRequired:"This feature requires a Premium subscription",
+    subscribeTitle:"Unlock everything",
+    subscribeSubtitle:"Unlimited exports + unlimited scans",
+    planMonth:"1 Month", planSix:"6 Months", planYear:"1 Year",
+    perMonth:"/month", save:"Save", bestValue:"Best value",
+    subscribe:"Subscribe Now", restoreFree:"Back to Free",
+    maybeLater:"Maybe later", activatedPro:"Premium activated (demo) ✓",
+    demoNote:"This is a demo activation only — no real payment",
+    proActive:"Pro ✓", freeLeft:(n)=>`${n} scans left`
   }
 };
 let uiLang = 'ar';
+
+// ===== نظام الاشتراك والحدود المجانية (محاكاة - بدون دفع فعلي) =====
+const FREE_DAILY_LIMIT = 3;
+const STORAGE_KEYS = { isPro: 'masah_is_pro', scanDate: 'masah_scan_date', scanCount: 'masah_scan_count' };
+
+function getToday(){
+  return new Date().toISOString().split('T')[0]; // مثال: 2026-06-21
+}
+
+function isPro(){
+  return localStorage.getItem(STORAGE_KEYS.isPro) === 'true';
+}
+
+function setPro(value){
+  localStorage.setItem(STORAGE_KEYS.isPro, value ? 'true' : 'false');
+}
+
+function getScansUsedToday(){
+  const storedDate = localStorage.getItem(STORAGE_KEYS.scanDate);
+  if(storedDate !== getToday()){
+    // يوم جديد: نصفّر العداد تلقائياً
+    localStorage.setItem(STORAGE_KEYS.scanDate, getToday());
+    localStorage.setItem(STORAGE_KEYS.scanCount, '0');
+    return 0;
+  }
+  return parseInt(localStorage.getItem(STORAGE_KEYS.scanCount) || '0', 10);
+}
+
+function incrementScansUsed(){
+  const current = getScansUsedToday();
+  localStorage.setItem(STORAGE_KEYS.scanDate, getToday());
+  localStorage.setItem(STORAGE_KEYS.scanCount, String(current + 1));
+}
+
+function canScanNow(){
+  return isPro() || getScansUsedToday() < FREE_DAILY_LIMIT;
+}
+
+function updateProBadge(){
+  const badge = document.getElementById('proBadge');
+  if(!badge) return;
+  if(isPro()){
+    badge.textContent = dict[uiLang].proActive;
+    badge.classList.add('is-pro');
+  } else {
+    const left = Math.max(0, FREE_DAILY_LIMIT - getScansUsedToday());
+    badge.textContent = dict[uiLang].freeLeft(left);
+    badge.classList.remove('is-pro');
+  }
+}
 
 // فحص أولي: تأكد إن مكتبة Tesseract تحمّلت بنجاح من الإنترنت
 window.addEventListener('load', ()=>{
@@ -20720,6 +20987,7 @@ window.addEventListener('load', ()=>{
     document.getElementById('btnCamera').disabled = true;
     document.getElementById('btnGallery').disabled = true;
   }
+  updateProBadge();
 });
 
 function setUiLang(lang){
@@ -20737,6 +21005,7 @@ function setUiLang(lang){
   document.getElementById('lblExport').textContent = d.exportLabel;
   const out = document.getElementById('translateOutput');
   if(out.classList.contains('empty')) out.textContent = d.emptyTranslate;
+  updateProBadge();
 }
 document.getElementById('ui-ar').onclick = ()=>setUiLang('ar');
 document.getElementById('ui-en').onclick = ()=>setUiLang('en');
@@ -20800,6 +21069,13 @@ function preprocessImage(file){
 
 async function handleImage(file){
   if(!file) return;
+
+  // فحص الحد المجاني اليومي قبل أي معالجة — يمنع استهلاك الموارد إذا انتهى الحد
+  if(!canScanNow()){
+    showSubscribeModal('scan');
+    return;
+  }
+
   const url = URL.createObjectURL(file);
   stageEmpty.style.display = 'none';
   previewImg.src = url;
@@ -20847,6 +21123,12 @@ async function handleImage(file){
     translateBar.classList.add('show');
     exportCard.classList.add('show');
     detectAndSetLang(text);
+
+    // نزيد عداد القراءات فقط بعد نجاح استخراج نص فعلي (وليس عند صورة فاضية أو فاشلة)
+    if(!isPro()){
+      incrementScansUsed();
+      updateProBadge();
+    }
   }catch(err){
     scanOverlay.classList.remove('active');
     console.error(err);
@@ -21101,6 +21383,101 @@ function downloadBlob(blob, filename){
   link.click();
   document.body.removeChild(link);
 }
+
+// ===== منطق نافذة الاشتراك المنبثقة =====
+let selectedPlan = 'six'; // الخطة المختارة افتراضياً (الأفضل قيمة)
+let pendingExportAction = null; // الدالة المؤجلة اللي تنفذ تلقائياً بعد نجاح "الاشتراك"
+
+function refreshSubscribeTexts(){
+  const d = dict[uiLang];
+  document.getElementById('subTitle').textContent = d.subscribeTitle;
+  document.getElementById('subSubtitle').textContent = d.subscribeSubtitle;
+  document.getElementById('planMonthLabel').textContent = d.planMonth;
+  document.getElementById('planSixLabel').textContent = d.planSix;
+  document.getElementById('planYearLabel').textContent = d.planYear;
+  document.getElementById('bestValueLabel').textContent = d.bestValue;
+  document.getElementById('subscribeLabel').textContent = d.subscribe;
+  document.getElementById('maybeLaterBtn').textContent = d.maybeLater;
+  document.getElementById('demoNoteText').textContent = d.demoNote;
+}
+
+function showSubscribeModal(context){
+  // context: 'scan' (انتهت القراءات المجانية) أو 'export' (ميزة تصدير مقفلة)
+  pendingExportAction = (context && typeof context === 'function') ? context : null;
+  refreshSubscribeTexts();
+  document.getElementById('subscribeOverlay').classList.add('show');
+}
+
+function hideSubscribeModal(){
+  document.getElementById('subscribeOverlay').classList.remove('show');
+  pendingExportAction = null;
+}
+
+document.getElementById('modalClose').onclick = hideSubscribeModal;
+document.getElementById('maybeLaterBtn').onclick = hideSubscribeModal;
+document.getElementById('subscribeOverlay').onclick = (e)=>{
+  if(e.target.id === 'subscribeOverlay') hideSubscribeModal();
+};
+
+document.querySelectorAll('.plan-card').forEach(card=>{
+  card.onclick = ()=>{
+    document.querySelectorAll('.plan-card').forEach(c=>c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedPlan = card.dataset.plan;
+  };
+});
+// تحديد الخطة الافتراضية بصرياً عند التحميل
+document.addEventListener('DOMContentLoaded', ()=>{
+  const defaultCard = document.querySelector('.plan-card[data-plan="six"]');
+  if(defaultCard) defaultCard.classList.add('selected');
+});
+
+document.getElementById('confirmSubscribe').onclick = ()=>{
+  // محاكاة تفعيل الاشتراك فوراً (بدون أي دفع فعلي حقيقي) — هذا نموذج توضيحي فقط
+  setPro(true);
+  document.body.classList.remove('is-free');
+  updateProBadge();
+  hideSubscribeModal();
+  showToast(dict[uiLang].activatedPro);
+
+  // لو فيه إجراء تصدير كان مؤجلاً بانتظار الاشتراك، ننفذه تلقائياً الآن
+  if(pendingExportAction){
+    pendingExportAction();
+    pendingExportAction = null;
+  }
+};
+
+// زر مخصص للتجربة: الرجوع للوضع المجاني (موجود فقط بهذا النموذج التوضيحي، يساعدك تعيد تجربة القفل)
+document.getElementById('proBadge').onclick = ()=>{
+  if(isPro()){
+    if(confirm(uiLang==='ar' ? 'الرجوع للنسخة المجانية؟ (هذا فقط لإعادة تجربة النموذج)' : 'Switch back to Free? (demo reset only)')){
+      setPro(false);
+      document.body.classList.add('is-free');
+      updateProBadge();
+    }
+  } else {
+    showSubscribeModal();
+  }
+};
+
+// تطبيق وضع "مجاني" على body عند التحميل إذا المستخدم غير مشترك (يُظهر شارات القفل)
+if(!isPro()){
+  document.body.classList.add('is-free');
+}
+
+// ===== قفل أزرار التصدير الأربعة للمستخدمين غير المشتركين =====
+// نعترض الضغط بمستوى "capture" قبل أي دالة تصدير حالية، فنوقف التنفيذ تماماً إذا لم يكن مشترك
+['exportWord','exportPdf','exportExcel','exportPptx'].forEach(id=>{
+  const btn = document.getElementById(id);
+  if(!btn) return;
+  btn.addEventListener('click', function(e){
+    if(!isPro()){
+      e.preventDefault();
+      e.stopImmediatePropagation(); // يمنع تنفيذ دالة التصدير الأصلية المربوطة بنفس الزر
+      showSubscribeModal();
+    }
+  }, true); // true = capture phase، يضمن إنه يشتغل قبل أي onclick آخر
+});
 </script>
 </body>
 </html>
