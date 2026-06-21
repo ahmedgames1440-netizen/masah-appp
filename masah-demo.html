@@ -770,20 +770,32 @@ document.getElementById('translateBtn').onclick = async ()=>{
 
 // ===== Export functions =====
 document.getElementById('exportWord').onclick = async ()=>{
-  const { Document, Packer, Paragraph, TextRun } = docx;
-  const text = resultText.value;
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children: text.split('\n').map(line => new Paragraph({
-        children: [new TextRun({ text: line, font: "Arial", size: 24 })],
-        bidirectional: true
-      }))
-    }]
-  });
-  const blob = await Packer.toBlob(doc);
-  downloadBlob(blob, 'masah-export.docx');
-  showToast(dict[uiLang].exported('Word'));
+  try{
+    const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+    const text = resultText.value;
+    const lines = text.split('\n');
+
+    const paragraphs = lines.map(line => {
+      // سطر فاضي: نضيف فراغ بدل نص خالي تماماً، لأن بعض إصدارات docx ترفض TextRun بدون محتوى
+      const safeLine = line.length > 0 ? line : ' ';
+      return new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        bidirectional: true,
+        children: [ new TextRun({ text: safeLine, font: "Arial", size: 24 }) ]
+      });
+    });
+
+    const doc = new Document({
+      sections: [{ properties: {}, children: paragraphs }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    downloadBlob(blob, 'masah-export.docx');
+    showToast(dict[uiLang].exported('Word'));
+  }catch(err){
+    console.error('Word export error:', err);
+    showToast((uiLang==='ar' ? 'خطأ بتصدير Word: ' : 'Word export error: ') + (err.message || err));
+  }
 };
 
 document.getElementById('exportPdf').onclick = ()=>{
