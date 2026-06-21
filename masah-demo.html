@@ -12,7 +12,8 @@
 <!-- SheetJS لتصدير Excel -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- docx لتصدير Word -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<!-- docx.js: تحميل أساسي + احتياطي تلقائي. إذا فشل المصدر الأول لأي سبب (حظر شبكة، خلل سيرفر)، يُحمَّل بديل عند الحاجة -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js" onerror="window.__docxLoadFailed=true"></script>
 
 <style>
   :root{
@@ -769,14 +770,54 @@ document.getElementById('translateBtn').onclick = async ()=>{
 };
 
 // ===== Export functions =====
+// تحميل احتياطي ديناميكي لمكتبة docx — يحاول مصادر متعددة بالتسلسل
+// يُستخدم فقط إذا فشل التحميل الأساسي بأعلى الصفحة (شبكة، حظر CDN، إلخ)
+function loadScriptOnce(url){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = url;
+    s.onload = ()=> resolve();
+    s.onerror = ()=> reject(new Error('فشل تحميل: ' + url));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureDocxLoaded(){
+  if(typeof window.docx !== 'undefined') return true; // محمّلة بالفعل، لا حاجة لأي شيء
+
+  const fallbackSources = [
+    'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js',
+    'https://unpkg.com/docx@8.5.0/build/index.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js'
+  ];
+
+  for(const src of fallbackSources){
+    try{
+      await loadScriptOnce(src);
+      if(typeof window.docx !== 'undefined') return true;
+    }catch(e){
+      console.warn('docx fallback failed:', src, e);
+    }
+  }
+  return false;
+}
+
 document.getElementById('exportWord').onclick = async ()=>{
   try{
+    showToast(uiLang==='ar' ? 'جارٍ تجهيز Word…' : 'Preparing Word…');
+    const ready = await ensureDocxLoaded();
+    if(!ready){
+      showToast(uiLang==='ar'
+        ? '⚠ تعذّر تحميل مكوّن Word. تأكد من اتصال الإنترنت وحاول مجدداً'
+        : '⚠ Could not load Word component. Check your internet connection and try again');
+      return;
+    }
+
     const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
     const text = resultText.value;
     const lines = text.split('\n');
 
     const paragraphs = lines.map(line => {
-      // سطر فاضي: نضيف فراغ بدل نص خالي تماماً، لأن بعض إصدارات docx ترفض TextRun بدون محتوى
       const safeLine = line.length > 0 ? line : ' ';
       return new Paragraph({
         alignment: AlignmentType.RIGHT,
